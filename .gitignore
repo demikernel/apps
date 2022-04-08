@@ -1,0 +1,17 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+# Vim
+*.swo
+*.swp
+
+# IDEs
+.vscode
+tags
+
+# rust
+Cargo.lock
+
+# Build Artifacts
+/bin/
+/target/
