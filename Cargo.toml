@@ -15,6 +15,9 @@ edition = "2018"
 [[bin]]
 name = "udp-echo"
 
+[[bin]]
+name = "udp-pktgen"
+
 [dependencies]
 anyhow = "1.0.53"
 clap = "3.0.13"

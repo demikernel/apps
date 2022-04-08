@@ -23,6 +23,8 @@ export MTU ?= 1500
 export LOCAL ?= 127.0.0.1:12345
 export REMOTE ?= 127.0.0.1:23456
 export LIBOS ?= catnap
+export BUFSIZE ?= 1024
+export INJECTION_RATE ?= 1000
 
 #===============================================================================
 
@@ -32,6 +34,9 @@ all:
 
 run-udp-echo:
 	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-echo -- --local $(LOCAL) --remote $(REMOTE)
+
+run-udp-pktgen:
+	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-pktgen -- --local $(LOCAL) --remote $(REMOTE) --bufsize=$(BUFSIZE) --injection_rate=$(INJECTION_RATE)
 
 clean:
 	rm -rf target && \
