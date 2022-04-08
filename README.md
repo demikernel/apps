@@ -6,6 +6,7 @@ Demo Applications for Demikernel
 This repository various demo applications for Demikernel:
 - [x] `udp-echo`: Echoes UDP Packets
 - [x] `udp-pktgen`: Generates UDP Packets
+- [x] `udp-relay`: Relays UDP Packets
 
 Building
 ---------
