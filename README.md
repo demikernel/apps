@@ -5,6 +5,7 @@ Demo Applications for Demikernel
 [![Build](https://github.com/demikernel/apps/actions/workflows/build.yml/badge.svg)](https://github.com/demikernel/apps/actions/workflows/build.yml)
 
 This repository various demo applications for Demikernel:
+- [x] `tcp-pktgen`: Generates TCP Packets
 - [x] `udp-dump`: Dumps Incoming Packets on a UDP Port
 - [x] `udp-echo`: Echoes UDP Packets
 - [x] `udp-pktgen`: Generates UDP Packets
