@@ -16,6 +16,9 @@ edition = "2018"
 name = "tcp-dump"
 
 [[bin]]
+name = "tcp-echo"
+
+[[bin]]
 name = "tcp-pktgen"
 
 [[bin]]
