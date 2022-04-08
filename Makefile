@@ -32,6 +32,9 @@ all:
 	echo $(PKG_CONFIG_PATH)
 	$(CARGO) build --all $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER)
 
+run-udp-dump:
+	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-dump -- --local $(LOCAL)
+
 run-udp-echo:
 	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-echo -- --local $(LOCAL) --remote $(REMOTE)
 

@@ -2,8 +2,10 @@ Demo Applications for Demikernel
 ================================
 
 [![Join us on Slack!](https://img.shields.io/badge/chat-on%20Slack-e01563.svg)](https://join.slack.com/t/demikernel/shared_invite/zt-11i6lgaw5-HFE_IAls7gUX3kp1XSab0g)
+[![Build](https://github.com/demikernel/apps/actions/workflows/build.yml/badge.svg)](https://github.com/demikernel/apps/actions/workflows/build.yml)
 
 This repository various demo applications for Demikernel:
+- [x] `udp-dump`: Dumps Incoming Packets on a UDP Port
 - [x] `udp-echo`: Echoes UDP Packets
 - [x] `udp-pktgen`: Generates UDP Packets
 - [x] `udp-relay`: Relays UDP Packets
