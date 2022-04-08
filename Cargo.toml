@@ -1,0 +1,29 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+[package]
+name = "apps"
+version = "0.1.0"
+authors = [ "Microsoft Corporation" ]
+description = "Demo Applications for Demikernel"
+homepage = "https://aka.ms/demikernel"
+repository = "https://github.com/demikernel/apps"
+readme = "README.md"
+license-file = "LICENSE.txt"
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0.53"
+clap = "3.0.13"
+libc = "0.2.115"
+log = "0.4.14"
+
+demikernel = { git = "https://github.com/demikernel/demikernel", rev = "f374986741b4d7e5bf8581d43882aa45d8e27419" }
+
+[features]
+default = [  ]
+mlx4 = [ "demikernel/mlx4" ]
+mlx5 = [ "demikernel/mlx5" ]
+catnip-libos = [ "demikernel/catnip-libos" ]
+catnap-libos = [ "demikernel/catnap-libos" ]
+catpowder-libos = [ "demikernel/catpowder-libos" ]
