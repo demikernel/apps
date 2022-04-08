@@ -13,6 +13,9 @@ license-file = "LICENSE.txt"
 edition = "2018"
 
 [[bin]]
+name = "tcp-dump"
+
+[[bin]]
 name = "tcp-pktgen"
 
 [[bin]]

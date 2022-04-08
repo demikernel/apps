@@ -32,6 +32,9 @@ all:
 	echo $(PKG_CONFIG_PATH)
 	$(CARGO) build --all $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER)
 
+run-tcp-dump:
+	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin tcp-dump -- --local $(LOCAL)
+
 run-tcp-pktgen:
 	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin tcp-pktgen -- --remote $(REMOTE) --bufsize=$(BUFSIZE) --injection_rate=$(INJECTION_RATE)
 
