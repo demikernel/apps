@@ -3,6 +3,9 @@ Demo Applications for Demikernel
 
 [![Join us on Slack!](https://img.shields.io/badge/chat-on%20Slack-e01563.svg)](https://join.slack.com/t/demikernel/shared_invite/zt-11i6lgaw5-HFE_IAls7gUX3kp1XSab0g)
 
+This repository various demo applications for Demikernel:
+- [x] `udp-echo`: Echoes UDP Packets
+
 Building
 ---------
 

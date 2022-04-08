@@ -21,6 +21,7 @@ export BUILD ?= --release
 export MSS ?= 1500
 export MTU ?= 1500
 export LOCAL ?= 127.0.0.1:12345
+export REMOTE ?= 127.0.0.1:23456
 export LIBOS ?= catnap
 
 #===============================================================================
@@ -28,6 +29,9 @@ export LIBOS ?= catnap
 all:
 	echo $(PKG_CONFIG_PATH)
 	$(CARGO) build --all $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER)
+
+run-udp-echo:
+	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-echo -- --local $(LOCAL) --remote $(REMOTE)
 
 clean:
 	rm -rf target && \

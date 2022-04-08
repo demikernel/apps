@@ -12,6 +12,9 @@ readme = "README.md"
 license-file = "LICENSE.txt"
 edition = "2018"
 
+[[bin]]
+name = "udp-echo"
+
 [dependencies]
 anyhow = "1.0.53"
 clap = "3.0.13"
