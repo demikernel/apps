@@ -5,6 +5,9 @@ Demo Applications for Demikernel
 [![Build](https://github.com/demikernel/apps/actions/workflows/build.yml/badge.svg)](https://github.com/demikernel/apps/actions/workflows/build.yml)
 
 This repository various demo applications for Demikernel:
+- [x] `tcp-echo`: Echoes TCP Packets
+- [x] `tcp-dump`: Dumps Incoming Packets on a TCP Port
+- [x] `tcp-pktgen`: Generates TCP Packets
 - [x] `udp-dump`: Dumps Incoming Packets on a UDP Port
 - [x] `udp-echo`: Echoes UDP Packets
 - [x] `udp-pktgen`: Generates UDP Packets
@@ -23,7 +26,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh    # Get Rust too
 export WORKDIR=$HOME                               # Change this to whatever you want.
 cd $WORKDIR                                        # Switch to working directory.
 git clone https://github.com/demikernel/apps.git   # Clone.
-cd $WORKDIR/apps                                   # Switch to working directory.
+cd $WORKDIR/apps                                   # Switch to repository's source tree.
 ```
 
 **3. Build This Utility**
