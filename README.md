@@ -26,7 +26,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh    # Get Rust too
 export WORKDIR=$HOME                               # Change this to whatever you want.
 cd $WORKDIR                                        # Switch to working directory.
 git clone https://github.com/demikernel/apps.git   # Clone.
-cd $WORKDIR/apps                                   # Switch to working directory.
+cd $WORKDIR/apps                                   # Switch to repository's source tree.
 ```
 
 **3. Build This Utility**
