@@ -25,6 +25,7 @@ export REMOTE ?= 127.0.0.1:23456
 export LIBOS ?= catnap
 export BUFSIZE ?= 1024
 export INJECTION_RATE ?= 1000
+export TIMEOUT ?= 180
 
 #===============================================================================
 
@@ -32,28 +33,28 @@ all:
 	$(CARGO) build --all $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER)
 
 run-tcp-dump:
-	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin tcp-dump -- --local $(LOCAL)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin tcp-dump -- --local $(LOCAL)
 
 run-tcp-echo-server:
-	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin tcp-echo -- --peer server --local $(LOCAL) --bufsize=$(BUFSIZE)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin tcp-echo -- --peer server --local $(LOCAL) --bufsize=$(BUFSIZE)
 
 run-tcp-echo-client:
-	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin tcp-echo -- --peer client --remote $(REMOTE) --bufsize=$(BUFSIZE)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin tcp-echo -- --peer client --remote $(REMOTE) --bufsize=$(BUFSIZE)
 
 run-tcp-pktgen:
-	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin tcp-pktgen -- --remote $(REMOTE) --bufsize=$(BUFSIZE) --injection_rate=$(INJECTION_RATE)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin tcp-pktgen -- --remote $(REMOTE) --bufsize=$(BUFSIZE) --injection_rate=$(INJECTION_RATE)
 
 run-udp-dump:
-	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-dump -- --local $(LOCAL)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-dump -- --local $(LOCAL)
 
 run-udp-echo:
-	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-echo -- --local $(LOCAL) --remote $(REMOTE)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-echo -- --local $(LOCAL) --remote $(REMOTE)
 
 run-udp-pktgen:
-	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-pktgen -- --local $(LOCAL) --remote $(REMOTE) --bufsize=$(BUFSIZE) --injection_rate=$(INJECTION_RATE)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-pktgen -- --local $(LOCAL) --remote $(REMOTE) --bufsize=$(BUFSIZE) --injection_rate=$(INJECTION_RATE)
 
 run-udp-relay:
-	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-relay -- --local $(LOCAL) --remote $(REMOTE)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-relay -- --local $(LOCAL) --remote $(REMOTE)
 
 clean:
 	rm -rf target && \
