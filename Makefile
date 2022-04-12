@@ -29,7 +29,6 @@ export INJECTION_RATE ?= 1000
 #===============================================================================
 
 all:
-	echo $(PKG_CONFIG_PATH)
 	$(CARGO) build --all $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER)
 
 run-tcp-dump:
