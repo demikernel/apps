@@ -322,7 +322,10 @@ impl Application {
                 last_log = Instant::now();
             }
 
-            let (i, qd, result) = self.libos.wait_any2(&qtokens);
+            let (i, qd, result) = match self.libos.wait_any2(&qtokens) {
+                Ok((i, qd, result)) => (i, qd, result),
+                Err(e) => panic!("operation failed: {:?}", e),
+            };
             qtokens.swap_remove(i);
 
             // Parse result.
