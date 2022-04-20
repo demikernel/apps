@@ -222,7 +222,7 @@ impl Application {
             // Parse result.
             match result {
                 // Pop completed.
-                OperationResult::Pop(None, buf) => {
+                OperationResult::Pop(_, buf) => {
                     nbytes += buf.len();
                     // Push packet back.
                     let qt: QToken = match self.libos.pushto2(self.sockqd, &buf, self.remote) {
