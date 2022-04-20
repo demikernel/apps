@@ -39,7 +39,7 @@ clap = "3.0.13"
 libc = "0.2.115"
 log = "0.4.14"
 
-demikernel = { git = "https://github.com/demikernel/demikernel", rev = "bb2811ddfdc6b86f415cb1ea5d226e6eb9dab7e3" }
+demikernel = { git = "https://github.com/demikernel/demikernel", rev = "4284fd3dcee22fabd02b13e21a35d62055a4b336" }
 
 [features]
 default = [  ]
