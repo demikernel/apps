@@ -151,6 +151,26 @@ impl Application {
         let mut nbytes: usize = 0;
         let mut last_log: Instant = Instant::now();
 
+        // Accept first connection.
+        let qt: QToken = match self.libos.accept(self.sockqd) {
+            Ok(qt) => qt,
+            Err(e) => panic!("failed to accept connection on socket: {:?}", e.cause),
+        };
+        let (qd, mut qt): (QDesc, QToken) = match self.libos.wait2(qt) {
+            Ok((_, OperationResult::Accept(qd))) => {
+                println!("connection accepted!");
+                // Pop first packet.
+                let qt: QToken = match self.libos.pop(qd) {
+                    Ok(qt) => qt,
+                    Err(e) => panic!("failed to pop data from socket: {:?}", e.cause),
+                };
+
+                (qd, qt)
+            }
+            Err(e) => panic!("operation failed: {:?}", e.cause),
+            _ => panic!("unexpected result"),
+        };
+
         loop {
             // Dump statistics.
             if last_log.elapsed() > Duration::from_secs(Self::LOG_INTERVAL) {
@@ -160,10 +180,6 @@ impl Application {
             }
 
             // Drain packets.
-            let qt: QToken = match self.libos.pop(self.sockqd) {
-                Ok(qt) => qt,
-                Err(e) => panic!("failed to pop data from socket: {:?}", e.cause),
-            };
             match self.libos.wait2(qt) {
                 Ok((_, OperationResult::Pop(_, buf))) => {
                     nbytes += buf.len();
@@ -171,6 +187,10 @@ impl Application {
                 Err(e) => panic!("operation failed: {:?}", e.cause),
                 _ => panic!("unexpected result"),
             }
+            qt = match self.libos.pop(qd) {
+                Ok(qt) => qt,
+                Err(e) => panic!("failed to pop data from socket: {:?}", e.cause),
+            };
         }
     }
 }
