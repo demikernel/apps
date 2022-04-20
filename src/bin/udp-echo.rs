@@ -217,7 +217,10 @@ impl Application {
             }
 
             // TODO: add type annotation to the following variable once we drop generics on OperationResult.
-            let (i, _, result) = self.libos.wait_any2(&qtokens);
+            let (i, _, result) = match self.libos.wait_any2(&qtokens) {
+                Ok((i, qd, result)) => (i, qd, result),
+                Err(e) => panic!("operation failed: {:?}", e),
+            };
             qtokens.swap_remove(i);
 
             // Parse result.
