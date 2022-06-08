@@ -37,7 +37,7 @@ name = "udp-relay"
 anyhow = "1.0.57"
 clap = "3.1.18"
 libc = "0.2.126"
-log = "0.4.14"
+log = "0.4.17"
 
 demikernel = { git = "https://github.com/demikernel/demikernel", rev = "4f73fb452c950acfeee3985710639da294343a75" }
 
