@@ -34,12 +34,12 @@ name = "udp-pktgen"
 name = "udp-relay"
 
 [dependencies]
-anyhow = "1.0.53"
-clap = "3.0.13"
-libc = "0.2.115"
-log = "0.4.14"
+anyhow = "1.0.57"
+clap = "3.1.18"
+libc = "0.2.126"
+log = "0.4.17"
 
-demikernel = { git = "https://github.com/demikernel/demikernel", rev = "5e04170c5f4327078b4fdebc9bdd43ec2d2c8f63" }
+demikernel = { git = "https://github.com/demikernel/demikernel", rev = "4f73fb452c950acfeee3985710639da294343a75" }
 
 [features]
 default = [  ]
@@ -48,3 +48,4 @@ mlx5 = [ "demikernel/mlx5" ]
 catnip-libos = [ "demikernel/catnip-libos" ]
 catnap-libos = [ "demikernel/catnap-libos" ]
 catpowder-libos = [ "demikernel/catpowder-libos" ]
+catcollar-libos = [ "demikernel/catcollar-libos" ]
