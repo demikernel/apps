@@ -35,7 +35,7 @@ name = "udp-relay"
 
 [dependencies]
 anyhow = "1.0.57"
-clap = "3.0.13"
+clap = "3.1.18"
 libc = "0.2.115"
 log = "0.4.14"
 
