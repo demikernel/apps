@@ -8,13 +8,11 @@
 // Imports
 //==============================================================================
 
-use ::anyhow::{bail, Result};
+use ::anyhow::Result;
 use ::clap::{Arg, ArgMatches, Command};
-use ::demikernel::{Ipv4Addr, Ipv4Endpoint, LibOS, OperationResult, Port16, QDesc, QToken};
-use ::std::{
-    num::NonZeroU16,
-    time::{Duration, Instant},
-};
+use ::demikernel::{LibOS, OperationResult, QDesc, QToken};
+use ::std::time::{Duration, Instant};
+use ::std::{net::SocketAddrV4, str::FromStr};
 
 //==============================================================================
 // Program Arguments
@@ -23,29 +21,19 @@ use ::std::{
 /// Program Arguments
 #[derive(Debug)]
 pub struct ProgramArguments {
-    /// Local IPv4 address.
-    local_addr: Ipv4Addr,
-    /// Local port number.
-    local_port: Port16,
-    /// Remote address.
-    remote_addr: Ipv4Addr,
-    /// Remote port number.
-    remote_port: Port16,
+    /// Local socket IPv4 address.
+    local: SocketAddrV4,
+    /// Remote socket IPv4 address.
+    remote: SocketAddrV4,
 }
 
 /// Associate functions for Program Arguments
 impl ProgramArguments {
     /// Default local address.
-    const DEFAULT_LOCAL_ADDR: &'static str = "127.0.0.1";
-
-    /// Default local port.
-    const DEFAULT_LOCAL_PORT: u16 = 12345;
+    const DEFAULT_LOCAL: &'static str = "127.0.0.1:12345";
 
     /// Default host address.
-    const DEFAULT_REMOTE_ADDR: &'static str = "127.0.0.1";
-
-    /// Default host port number.
-    const DEFAULT_REMOTE_PORT: u16 = 23456;
+    const DEFAULT_REMOTE: &'static str = "127.0.0.1:23456";
 
     /// Parses the program arguments from the command line interface.
     pub fn new(app_name: &str, app_author: &str, app_about: &str) -> Result<Self> {
@@ -72,18 +60,8 @@ impl ProgramArguments {
 
         // Default arguments.
         let mut args: ProgramArguments = ProgramArguments {
-            local_addr: Self::DEFAULT_LOCAL_ADDR
-                .parse()
-                .expect("invalid local ipv4 address"),
-            local_port: Port16::new(
-                NonZeroU16::new(Self::DEFAULT_LOCAL_PORT).expect("invalid local port number"),
-            ),
-            remote_addr: Self::DEFAULT_REMOTE_ADDR
-                .parse()
-                .expect("invalid remote ipv4 address"),
-            remote_port: Port16::new(
-                NonZeroU16::new(Self::DEFAULT_REMOTE_PORT).expect("invalid remote port number"),
-            ),
+            local: SocketAddrV4::from_str(Self::DEFAULT_LOCAL)?,
+            remote: SocketAddrV4::from_str(Self::DEFAULT_REMOTE)?,
         };
 
         // Local address.
@@ -100,49 +78,25 @@ impl ProgramArguments {
     }
 
     /// Returns the local endpoint address parameter stored in the target program arguments.
-    pub fn get_local(&self) -> Ipv4Endpoint {
-        Ipv4Endpoint::new(self.local_addr, self.local_port)
+    pub fn get_local(&self) -> SocketAddrV4 {
+        self.local
     }
 
     /// Returns the remote endpoint address parameter stored in the target program arguments.
-    pub fn get_remote(&self) -> Ipv4Endpoint {
-        Ipv4Endpoint::new(self.remote_addr, self.remote_port)
-    }
-
-    /// Parses an address string.
-    fn parse_addr(addr: &str) -> Result<(Ipv4Addr, Port16)> {
-        let tokens: Vec<&str> = addr.split(":").collect();
-        if tokens.len() != 2 {
-            bail!("invalid address")
-        }
-        let addr: Ipv4Addr = tokens[0].parse().expect("invalid ipv4 address");
-        let portnum: u16 = tokens[1].parse().expect("invalid port number");
-        let port: Port16 = Port16::new(NonZeroU16::new(portnum).expect("invalid port nubmer"));
-        Ok((addr, port))
+    pub fn get_remote(&self) -> SocketAddrV4 {
+        self.remote
     }
 
     /// Sets the local address and port number parameters in the target program arguments.
     fn set_local_addr(&mut self, addr: &str) -> Result<()> {
-        match Self::parse_addr(addr) {
-            Ok((addr, port)) => {
-                self.local_addr = addr;
-                self.local_port = port;
-                Ok(())
-            }
-            Err(e) => Err(e),
-        }
+        self.local = SocketAddrV4::from_str(addr)?;
+        Ok(())
     }
 
     /// Sets the remote address and port number parameters in the target program arguments.
     fn set_remote_addr(&mut self, addr: &str) -> Result<()> {
-        match Self::parse_addr(addr) {
-            Ok((addr, port)) => {
-                self.remote_addr = addr;
-                self.remote_port = port;
-                Ok(())
-            }
-            Err(e) => Err(e),
-        }
+        self.remote = SocketAddrV4::from_str(addr)?;
+        Ok(())
     }
 }
 
@@ -157,7 +111,7 @@ struct Application {
     // Local socket descriptor.
     sockqd: QDesc,
     /// Remote endpoint.
-    remote: Ipv4Endpoint,
+    remote: SocketAddrV4,
 }
 
 /// Associated Functions for the Application
@@ -168,8 +122,8 @@ impl Application {
     /// Instantiates the application.
     pub fn new(mut libos: LibOS, args: &ProgramArguments) -> Self {
         // Extract arguments.
-        let local: Ipv4Endpoint = args.get_local();
-        let remote: Ipv4Endpoint = args.get_remote();
+        let local: SocketAddrV4 = args.get_local();
+        let remote: SocketAddrV4 = args.get_remote();
 
         // Create UDP socket.
         let sockqd: QDesc = match libos.socket(libc::AF_INET, libc::SOCK_DGRAM, 0) {
