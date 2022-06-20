@@ -10,7 +10,7 @@ homepage = "https://aka.ms/demikernel"
 repository = "https://github.com/demikernel/apps"
 readme = "README.md"
 license-file = "LICENSE.txt"
-edition = "2018"
+edition = "2021"
 
 [[bin]]
 name = "tcp-dump"
