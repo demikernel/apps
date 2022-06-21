@@ -10,7 +10,7 @@ homepage = "https://aka.ms/demikernel"
 repository = "https://github.com/demikernel/apps"
 readme = "README.md"
 license-file = "LICENSE.txt"
-edition = "2018"
+edition = "2021"
 
 [[bin]]
 name = "tcp-dump"
@@ -39,7 +39,7 @@ clap = "3.1.18"
 libc = "0.2.126"
 log = "0.4.17"
 
-demikernel = { git = "https://github.com/demikernel/demikernel", rev = "4f73fb452c950acfeee3985710639da294343a75" }
+demikernel = { git = "https://github.com/demikernel/demikernel", rev = "65fd747b1c53fe9e271b68e8927b530c66a6b2c8" }
 
 [features]
 default = [  ]

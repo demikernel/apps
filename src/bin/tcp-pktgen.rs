@@ -11,11 +11,10 @@
 use ::anyhow::{bail, Result};
 use ::clap::{Arg, ArgMatches, Command};
 use ::demikernel::OperationResult;
-use ::demikernel::{Ipv4Addr, Ipv4Endpoint, LibOS, Port16, QDesc, QToken};
-use ::std::{
-    num::NonZeroU16,
-    time::{Duration, Instant},
-};
+use ::demikernel::{LibOS, QDesc, QToken};
+use ::std::net::SocketAddrV4;
+use ::std::str::FromStr;
+use ::std::time::{Duration, Instant};
 
 //==============================================================================
 // Program Arguments
@@ -24,10 +23,8 @@ use ::std::{
 /// Program Arguments
 #[derive(Debug)]
 pub struct ProgramArguments {
-    /// Remote address.
-    remote_addr: Ipv4Addr,
-    /// Remote port number.
-    remote_port: Port16,
+    /// Remote socket IPv4 address.
+    remote: SocketAddrV4,
     /// Buffer size (in bytes).
     bufsize: usize,
     /// Injection rate (in micro-seconds).
@@ -37,10 +34,7 @@ pub struct ProgramArguments {
 /// Associate functions for Program Arguments
 impl ProgramArguments {
     /// Default host address.
-    const DEFAULT_REMOTE_ADDR: &'static str = "127.0.0.1";
-
-    /// Default host port number.
-    const DEFAULT_REMOTE_PORT: u16 = 23456;
+    const DEFAULT_REMOTE: &'static str = "127.0.0.1:23456";
 
     // Default buffer size.
     const DEFAULT_BUFSIZE: usize = 1024;
@@ -81,12 +75,7 @@ impl ProgramArguments {
 
         // Default arguments.
         let mut args: ProgramArguments = ProgramArguments {
-            remote_addr: Self::DEFAULT_REMOTE_ADDR
-                .parse()
-                .expect("invalid remote ipv4 address"),
-            remote_port: Port16::new(
-                NonZeroU16::new(Self::DEFAULT_REMOTE_PORT).expect("invalid remote port number"),
-            ),
+            remote: SocketAddrV4::from_str(Self::DEFAULT_REMOTE)?,
             bufsize: Self::DEFAULT_BUFSIZE,
             injection_rate: Self::DEFAULT_INJECTION_RATE,
         };
@@ -110,8 +99,8 @@ impl ProgramArguments {
     }
 
     /// Returns the remote endpoint address parameter stored in the target program arguments.
-    pub fn get_remote(&self) -> Ipv4Endpoint {
-        Ipv4Endpoint::new(self.remote_addr, self.remote_port)
+    pub fn get_remote(&self) -> SocketAddrV4 {
+        self.remote
     }
 
     /// Returns the buffer size parameter stored in the target program arguments.
@@ -124,28 +113,10 @@ impl ProgramArguments {
         self.injection_rate
     }
 
-    /// Parses an address string.
-    fn parse_addr(addr: &str) -> Result<(Ipv4Addr, Port16)> {
-        let tokens: Vec<&str> = addr.split(":").collect();
-        if tokens.len() != 2 {
-            bail!("invalid address")
-        }
-        let addr: Ipv4Addr = tokens[0].parse().expect("invalid ipv4 address");
-        let portnum: u16 = tokens[1].parse().expect("invalid port number");
-        let port: Port16 = Port16::new(NonZeroU16::new(portnum).expect("invalid port nubmer"));
-        Ok((addr, port))
-    }
-
     /// Sets the remote address and port number parameters in the target program arguments.
     fn set_remote_addr(&mut self, addr: &str) -> Result<()> {
-        match Self::parse_addr(addr) {
-            Ok((addr, port)) => {
-                self.remote_addr = addr;
-                self.remote_port = port;
-                Ok(())
-            }
-            Err(e) => Err(e),
-        }
+        self.remote = SocketAddrV4::from_str(addr)?;
+        Ok(())
     }
 
     /// Sets the buffer size parameter in the target program arguments.
@@ -195,7 +166,7 @@ impl Application {
     /// Instantiates the application.
     pub fn new(mut libos: LibOS, args: &ProgramArguments) -> Self {
         // Extract arguments.
-        let remote: Ipv4Endpoint = args.get_remote();
+        let remote: SocketAddrV4 = args.get_remote();
         let bufsize: usize = args.get_bufsize();
         let injection_rate: u64 = args.get_injection_rate();
 

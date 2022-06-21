@@ -10,11 +10,10 @@
 
 use ::anyhow::{bail, Result};
 use ::clap::{Arg, ArgMatches, Command};
-use ::demikernel::{Ipv4Addr, Ipv4Endpoint, LibOS, OperationResult, Port16, QDesc, QToken};
-use ::std::{
-    num::NonZeroU16,
-    time::{Duration, Instant},
-};
+use ::demikernel::{LibOS, OperationResult, QDesc, QToken};
+use ::std::net::SocketAddrV4;
+use ::std::str::FromStr;
+use ::std::time::{Duration, Instant};
 
 //==============================================================================
 // Program Arguments
@@ -23,14 +22,10 @@ use ::std::{
 /// Program Arguments
 #[derive(Debug)]
 pub struct ProgramArguments {
-    /// Local IPv4 address.
-    local_addr: Option<Ipv4Addr>,
-    /// Local port number.
-    local_port: Option<Port16>,
-    /// Remote address.
-    remote_addr: Option<Ipv4Addr>,
-    /// Remote port number.
-    remote_port: Option<Port16>,
+    /// Local socket IPv4 address.
+    local: Option<SocketAddrV4>,
+    /// Remote socket IPv4 address.
+    remote: Option<SocketAddrV4>,
     /// Buffer size (in bytes).
     bufsize: usize,
     /// Peer type.
@@ -84,10 +79,8 @@ impl ProgramArguments {
 
         // Default arguments.
         let mut args: ProgramArguments = ProgramArguments {
-            local_addr: None,
-            local_port: None,
-            remote_addr: None,
-            remote_port: None,
+            local: None,
+            remote: None,
             bufsize: Self::DEFAULT_BUFSIZE,
             peer_type: "server".to_string(),
         };
@@ -126,31 +119,13 @@ impl ProgramArguments {
     }
 
     /// Returns the local endpoint address parameter stored in the target program arguments.
-    pub fn get_local(&self) -> Option<Ipv4Endpoint> {
-        if let (Some(addr), Some(port)) = (self.local_addr, self.local_port) {
-            return Some(Ipv4Endpoint::new(addr, port));
-        }
-        None
+    pub fn get_local(&self) -> Option<SocketAddrV4> {
+        self.local
     }
 
     /// Returns the remote endpoint address parameter stored in the target program arguments.
-    pub fn get_remote(&self) -> Option<Ipv4Endpoint> {
-        if let (Some(addr), Some(port)) = (self.remote_addr, self.remote_port) {
-            return Some(Ipv4Endpoint::new(addr, port));
-        }
-        None
-    }
-
-    /// Parses an address string.
-    fn parse_addr(addr: &str) -> Result<(Ipv4Addr, Port16)> {
-        let tokens: Vec<&str> = addr.split(":").collect();
-        if tokens.len() != 2 {
-            bail!("invalid address")
-        }
-        let addr: Ipv4Addr = tokens[0].parse().expect("invalid ipv4 address");
-        let portnum: u16 = tokens[1].parse().expect("invalid port number");
-        let port: Port16 = Port16::new(NonZeroU16::new(portnum).expect("invalid port nubmer"));
-        Ok((addr, port))
+    pub fn get_remote(&self) -> Option<SocketAddrV4> {
+        self.remote
     }
 
     /// Sets the buffer size parameter in the target program arguments.
@@ -176,26 +151,14 @@ impl ProgramArguments {
 
     /// Sets the local address and port number parameters in the target program arguments.
     fn set_local_addr(&mut self, addr: &str) -> Result<()> {
-        match Self::parse_addr(addr) {
-            Ok((addr, port)) => {
-                self.local_addr = Some(addr);
-                self.local_port = Some(port);
-                Ok(())
-            }
-            Err(e) => Err(e),
-        }
+        self.local = Some(SocketAddrV4::from_str(addr)?);
+        Ok(())
     }
 
     /// Sets the remote address and port number parameters in the target program arguments.
     fn set_remote_addr(&mut self, addr: &str) -> Result<()> {
-        match Self::parse_addr(addr) {
-            Ok((addr, port)) => {
-                self.remote_addr = Some(addr);
-                self.remote_port = Some(port);
-                Ok(())
-            }
-            Err(e) => Err(e),
-        }
+        self.remote = Some(SocketAddrV4::from_str(addr)?);
+        Ok(())
     }
 }
 
