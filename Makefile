@@ -82,6 +82,9 @@ check-fmt-rust:
 doc:
 	$(CARGO) doc $(CARGO_FEATURES) $(CARGO_FLAGS) --no-deps
 
+run-kv-store:
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin kv-store -- --local $(LOCAL) --remtote $(REMOTE)
+
 clean:
 	rm -rf target && \
 	$(CARGO) clean && \

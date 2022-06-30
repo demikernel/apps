@@ -33,6 +33,9 @@ name = "udp-pktgen"
 [[bin]]
 name = "udp-relay"
 
+[[bin]]
+name = "kv-store"
+
 [dependencies]
 anyhow = "1.0.58"
 clap = "3.2.12"
