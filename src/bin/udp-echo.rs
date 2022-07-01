@@ -174,12 +174,13 @@ impl Application {
                 Err(e) => panic!("operation failed: {:?}", e),
             };
             qtokens.swap_remove(i);
-
+            
             // Parse result.
             match result {
                 // Pop completed.
-                OperationResult::Pop(_, buf) => {
+                OperationResult::Pop(addr, buf) => {
                     nbytes += buf.len();
+                    println!("addr = {:?}", addr);
                     // Push packet back.
                     let qt: QToken = match self.libos.pushto2(self.sockqd, &buf, self.remote) {
                         Ok(qt) => qt,
@@ -212,7 +213,7 @@ fn main() -> Result<()> {
         "Echoes UDP packets.",
     )?;
 
-    let libos: LibOS = LibOS::new();
+    let libos: LibOS = LibOS::new(0, 1);
 
     Application::new(libos, &args).run();
 }

@@ -213,7 +213,7 @@ fn main() -> Result<()> {
         "Relays UDP packets.",
     )?;
 
-    let libos: LibOS = LibOS::new();
+    let libos: LibOS = LibOS::new(0);
 
     Application::new(libos, &args).run();
 }

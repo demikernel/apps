@@ -251,7 +251,7 @@ fn main() -> Result<()> {
         "Generates TCP traffic",
     )?;
 
-    let libos: LibOS = LibOS::new();
+    let libos: LibOS = LibOS::new(0);
 
     Application::new(libos, &args).run();
 }

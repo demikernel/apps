@@ -1,3 +1,4 @@
+#![feature(once_cell)]
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
@@ -8,27 +9,30 @@
 // Imports
 //==============================================================================
 
-use ::anyhow::{bail, Result};
+use ::anyhow::Result;
 use ::clap::{Arg, ArgMatches, Command};
 use ::demikernel::{LibOS, OperationResult, QDesc, QToken};
 use ::std::time::{Duration, Instant};
 use ::std::{net::SocketAddrV4, str::FromStr};
+use ::std::thread;
+use ::std::thread::JoinHandle;
+use ::std::sync::Arc;
+use ::std::sync::Mutex;
+use ::std::sync::mpsc;
 
 //==============================================================================
 // Program Arguments
 //==============================================================================
 
 /// Program Arguments
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ProgramArguments {
     /// Local socket IPv4 address.
     local: SocketAddrV4,
     /// Remote socket IPv4 address.
     remote: SocketAddrV4,
-    /// Buffer size (in bytes).
-    bufsize: usize,
-    /// Injection rate (in micro-seconds).
-    injection_rate: u64,
+    /// Number of threads.
+    threads: u32,
 }
 
 /// Associate functions for Program Arguments
@@ -39,11 +43,8 @@ impl ProgramArguments {
     /// Default host address.
     const DEFAULT_REMOTE: &'static str = "127.0.0.1:23456";
 
-    // Default buffer size.
-    const DEFAULT_BUFSIZE: usize = 1024;
-
-    // Default injection rate.
-    const DEFAULT_INJECTION_RATE: u64 = 100;
+    /// Default number of threads
+    const DEFAULT_THREADS: u32 = 1;
 
     /// Parses the program arguments from the command line interface.
     pub fn new(app_name: &str, app_author: &str, app_about: &str) -> Result<Self> {
@@ -67,20 +68,12 @@ impl ProgramArguments {
                     .help("Sets remote address"),
             )
             .arg(
-                Arg::new("bufsize")
-                    .long("bufsize")
+                Arg::new("threads")
+                    .long("threads")
                     .takes_value(true)
-                    .required(true)
-                    .value_name("SIZE")
-                    .help("Sets buffer size"),
-            )
-            .arg(
-                Arg::new("injection_rate")
-                    .long("injection_rate")
-                    .takes_value(true)
-                    .required(true)
-                    .value_name("RATE")
-                    .help("Sets packet injection rate"),
+                    .required(false)
+                    .value_name("threads")
+                    .help("Sets the number of threads"),
             )
             .get_matches();
 
@@ -88,8 +81,7 @@ impl ProgramArguments {
         let mut args: ProgramArguments = ProgramArguments {
             local: SocketAddrV4::from_str(Self::DEFAULT_LOCAL)?,
             remote: SocketAddrV4::from_str(Self::DEFAULT_REMOTE)?,
-            bufsize: Self::DEFAULT_BUFSIZE,
-            injection_rate: Self::DEFAULT_INJECTION_RATE,
+            threads: Self::DEFAULT_THREADS,
         };
 
         // Local address.
@@ -100,16 +92,6 @@ impl ProgramArguments {
         // Remote address.
         if let Some(addr) = matches.value_of("remote") {
             args.set_remote_addr(addr)?;
-        }
-
-        // Buffer size.
-        if let Some(bufsize) = matches.value_of("bufsize") {
-            args.set_bufsize(bufsize)?;
-        }
-
-        // Injection rate.
-        if let Some(injection_rate) = matches.value_of("injection_rate") {
-            args.set_injection_rate(injection_rate)?;
         }
 
         Ok(args)
@@ -125,14 +107,9 @@ impl ProgramArguments {
         self.remote
     }
 
-    /// Returns the buffer size parameter stored in the target program arguments.
-    pub fn get_bufsize(&self) -> usize {
-        self.bufsize
-    }
-
-    /// Returns the injection rate parameter stored in the target program arguments.
-    pub fn get_injection_rate(&self) -> u64 {
-        self.injection_rate
+    /// Returns the number of threads in the target program arguments.
+    pub fn get_threads(&self) -> u32 {
+        self.threads
     }
 
     /// Sets the local address and port number parameters in the target program arguments.
@@ -147,26 +124,10 @@ impl ProgramArguments {
         Ok(())
     }
 
-    /// Sets the buffer size parameter in the target program arguments.
-    fn set_bufsize(&mut self, bufsize_str: &str) -> Result<()> {
-        let bufsize: usize = bufsize_str.parse()?;
-        if bufsize > 0 {
-            self.bufsize = bufsize;
-            Ok(())
-        } else {
-            bail!("invalid buffer size")
-        }
-    }
-
-    /// Sets the injection rate parameter in the target program arguments.
-    fn set_injection_rate(&mut self, injection_rate_str: &str) -> Result<()> {
-        let injection_rate: u64 = injection_rate_str.parse()?;
-        if injection_rate > 0 {
-            self.injection_rate = injection_rate;
-            Ok(())
-        } else {
-            bail!("invalid injection rate")
-        }
+    /// Sets the number of threads in the target program arguments.
+    fn set_threads(&mut self, threads: u32) -> Result<()> {
+        self.threads = threads;
+        Ok(())
     }
 }
 
@@ -178,14 +139,12 @@ impl ProgramArguments {
 struct Application {
     /// Underlying libOS.
     libos: LibOS,
-    // Local socket descriptor.
+    /// Local socket descriptor.
     sockqd: QDesc,
     /// Remote endpoint.
     remote: SocketAddrV4,
-    /// Buffer size.
-    bufsize: usize,
-    /// Injection rate
-    injection_rate: u64,
+    /// The number of threads.
+    threads: u32,
 }
 
 /// Associated Functions for the Application
@@ -198,11 +157,10 @@ impl Application {
         // Extract arguments.
         let local: SocketAddrV4 = args.get_local();
         let remote: SocketAddrV4 = args.get_remote();
-        let bufsize: usize = args.get_bufsize();
-        let injection_rate: u64 = args.get_injection_rate();
+        let threads: u32 = args.get_threads();
 
         // Create UDP socket.
-        let sockqd: QDesc = match libos.socket(libc::AF_INET, libc::SOCK_DGRAM, 1) {
+        let sockqd: QDesc = match libos.socket(libc::AF_INET, libc::SOCK_DGRAM, 0) {
             Ok(qd) => qd,
             Err(e) => panic!("failed to create socket: {:?}", e.cause),
         };
@@ -213,76 +171,76 @@ impl Application {
             Err(e) => panic!("failed to bind socket: {:?}", e.cause),
         };
 
-        println!("Local Address:  {:?}", local);
-        println!("Remote Address: {:?}", remote);
+        println!("Local Address: {:?}", local);
 
         Self {
             libos,
             sockqd,
             remote,
-            bufsize,
-            injection_rate,
+            threads,
         }
     }
 
-    /// Runs the target application.
-    pub fn run(&mut self) {
-        let start: Instant = Instant::now();
-        let mut nbytes: usize = 0;
-        let mut last_push: Instant = Instant::now();
-        let mut last_log: Instant = Instant::now();
-        let data: Vec<u8> = Self::mkbuf(self.bufsize, 0x65);
+    /// Runs the target echo server.
+    pub fn run(&mut self) -> ! { 
+
+        let mut qtokens: Vec<QToken> = Vec::new();
 
         loop {
-            // Dump statistics.
-            if last_log.elapsed() > Duration::from_secs(Self::LOG_INTERVAL) {
-                let elapsed: Duration = Instant::now() - start;
-                println!("{:?} B / {:?} us", nbytes, elapsed.as_micros());
-                last_log = Instant::now();
-            }
+            let qt: QToken = match self.libos.pop(self.sockqd) {
+                Ok(qt) => qt,
+                Err(e) => panic!("failed to pop data from socket: {:?}", e.cause),
+            };
+            qtokens.push(qt);
 
-            // Push packet.
-            if last_push.elapsed() > Duration::from_micros(self.injection_rate) {
-                let qt: QToken = match self.libos.pushto2(self.sockqd, &data, self.remote) {
-                    Ok(qt) => qt,
-                    Err(e) => panic!("failed to push data to socket: {:?}", e.cause),
-                };
-                match self.libos.wait2(qt) {
-                    Ok((_, OperationResult::Push)) => (),
-                    Err(e) => panic!("operation failed: {:?}", e.cause),
-                    _ => panic!("unexpected result"),
-                };
-                nbytes += self.bufsize;
-                last_push = Instant::now();
-            }
+            let (i, _qd, result) = match self.libos.wait_any2(&qtokens) {
+                Ok((i, qd, result)) => (i, qd, result),
+                Err(e) => panic!("operation failed: {:?}", e),
+            };
+            qtokens.swap_remove(i);
+
+            match result {
+                OperationResult::Pop(_, buf) => {
+                    // let qt: QToken = match self.libos.push2(qd, &buf) {
+                    let qt: QToken = match self.libos.pushto2(self.sockqd, &buf, self.remote) {
+                        Ok(qt) => qt,
+                        Err(e) => panic!("failed to push data to socket: {:?}", e.cause),
+                    };
+                    match self.libos.wait(qt) {
+                        Ok(_) => (),
+                        Err(e) => panic!("operation failed: {:?}", e.cause),
+                    };
+                }
+                OperationResult::Failed(e) => panic!("operation failed: {:?}", e),
+                _ => panic!("unexpected result"),
+            };
         }
-    }
-
-    /// Makes a buffer.
-    fn mkbuf(bufsize: usize, fill_char: u8) -> Vec<u8> {
-        let mut data: Vec<u8> = Vec::<u8>::with_capacity(bufsize);
-
-        for _ in 0..bufsize {
-            data.push(fill_char);
-        }
-
-        data
     }
 }
 
 //==============================================================================
 
-/// Drives the application.
 fn main() -> Result<()> {
     let args: ProgramArguments = ProgramArguments::new(
-        "udp-pktgen",
+        "udp-reflector",
         "Pedro Henrique Penna <ppenna@microsoft.com>",
-        "Generates UDP traffic.",
+        "Echoes UDP packets."
     )?;
 
-    let libos: LibOS = LibOS::new(0);
+    let args1 = args.clone();
 
-    Application::new(libos, &args).run();
+    let handle0 = thread::spawn(move || {
+        let libos: LibOS = LibOS::new(0, 2);
+        Application::new(libos, &args).run();
+    });
 
+    let handle1 = thread::spawn(move || {
+        let libos: LibOS = LibOS::new(1, 2);
+        Application::new(libos, &args1).run();
+    });
+
+    handle0.join().unwrap();
+    handle1.join().unwrap();
+    
     Ok(())
 }

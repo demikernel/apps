@@ -16,14 +16,15 @@ export SRCDIR = $(CURDIR)/src
 
 #===============================================================================
 
-export DRIVER ?= $(shell  [ ! -z "`lspci | grep -E "ConnectX-[4,5]"`" ] && echo mlx5 || echo mlx4)
+#export DRIVER ?= $(shell  [ ! -z "`lspci | grep -E "ConnectX-[4,5]"`" ] && echo mlx5 || echo mlx4)
 export BUILD ?= --release
 export MSS ?= 1500
 export MTU ?= 1500
 export LOCAL ?= 127.0.0.1:12345
 export REMOTE ?= 127.0.0.1:23456
 export LIBOS ?= catnap
-export BUFSIZE ?= 1024
+#export BUFSIZE ?= 1024
+export BUFSIZE ?= 64
 export INJECTION_RATE ?= 1000
 export TIMEOUT ?= 180
 
@@ -49,6 +50,9 @@ run-udp-dump:
 
 run-udp-echo:
 	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-echo -- --local $(LOCAL) --remote $(REMOTE)
+
+run-udp-reflector:
+	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-reflector -- --local $(LOCAL) --remote $(REMOTE)
 
 run-udp-pktgen:
 	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-pktgen -- --local $(LOCAL) --remote $(REMOTE) --bufsize=$(BUFSIZE) --injection_rate=$(INJECTION_RATE)
