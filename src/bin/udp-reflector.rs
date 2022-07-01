@@ -71,8 +71,8 @@ impl ProgramArguments {
                 Arg::new("threads")
                     .long("threads")
                     .takes_value(true)
-                    .required(false)
-                    .value_name("threads")
+                    .required(true)
+                    .value_name("THREADS")
                     .help("Sets the number of threads"),
             )
             .get_matches();
@@ -92,6 +92,11 @@ impl ProgramArguments {
         // Remote address.
         if let Some(addr) = matches.value_of("remote") {
             args.set_remote_addr(addr)?;
+        }
+
+        // Threads.
+        if let Some(threads) = matches.value_of("threads") {
+            args.set_threads(threads.parse().unwrap())?;
         }
 
         Ok(args)
@@ -171,6 +176,7 @@ impl Application {
             Err(e) => panic!("failed to bind socket: {:?}", e.cause),
         };
 
+        println!("Threads: {:?}", threads);
         println!("Local Address: {:?}", local);
 
         Self {
@@ -183,7 +189,6 @@ impl Application {
 
     /// Runs the target echo server.
     pub fn run(&mut self) -> ! { 
-
         let mut qtokens: Vec<QToken> = Vec::new();
 
         loop {
@@ -200,9 +205,8 @@ impl Application {
             qtokens.swap_remove(i);
 
             match result {
-                OperationResult::Pop(_, buf) => {
-                    // let qt: QToken = match self.libos.push2(qd, &buf) {
-                    let qt: QToken = match self.libos.pushto2(self.sockqd, &buf, self.remote) {
+                OperationResult::Pop(remote, buf) => {
+                    let qt: QToken = match self.libos.pushto2(self.sockqd, &buf, remote.unwrap()) {
                         Ok(qt) => qt,
                         Err(e) => panic!("failed to push data to socket: {:?}", e.cause),
                     };
@@ -221,26 +225,23 @@ impl Application {
 //==============================================================================
 
 fn main() -> Result<()> {
-    let args: ProgramArguments = ProgramArguments::new(
+    let args0: ProgramArguments = ProgramArguments::new(
         "udp-reflector",
-        "Pedro Henrique Penna <ppenna@microsoft.com>",
-        "Echoes UDP packets."
+        "Fabricio Carvalho <fabricio.carvalho@ufms.br>",
+        "Echoes UDP packets using threads in a single core."
     )?;
 
-    let args1 = args.clone();
+    let pool: Vec<_> = (0..args0.get_threads()).map(|i| {
+        let args = args0.clone();
+        thread::spawn(move || {
+            let libos: LibOS = LibOS::new(i as u16, args.get_threads() as u16);
+            Application::new(libos, &args).run();
+        })
+    }).collect();
 
-    let handle0 = thread::spawn(move || {
-        let libos: LibOS = LibOS::new(0, 2);
-        Application::new(libos, &args).run();
-    });
+    for handle in pool {
+        handle.join().unwrap();
+    }
 
-    let handle1 = thread::spawn(move || {
-        let libos: LibOS = LibOS::new(1, 2);
-        Application::new(libos, &args1).run();
-    });
-
-    handle0.join().unwrap();
-    handle1.join().unwrap();
-    
     Ok(())
 }
