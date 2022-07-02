@@ -23,10 +23,11 @@ export MTU ?= 1500
 export LOCAL ?= 127.0.0.1:12345
 export REMOTE ?= 127.0.0.1:23456
 export LIBOS ?= catnap
-#export BUFSIZE ?= 1024
 export BUFSIZE ?= 64
 export INJECTION_RATE ?= 1000
 export TIMEOUT ?= 180
+export PACKETS ?= 1
+export FLOWS ?= 1
 
 #===============================================================================
 
@@ -59,6 +60,9 @@ run-udp-pktgen:
 
 run-udp-relay:
 	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-relay -- --local $(LOCAL) --remote $(REMOTE)
+
+run-udp-latency:
+	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-latency -- --local $(LOCAL) --remote $(REMOTE) --bufsize=$(BUFSIZE) --flows=$(FLOWS) --packets=$(PACKETS)
 
 clean:
 	rm -rf target && \
