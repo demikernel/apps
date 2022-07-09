@@ -393,7 +393,7 @@ fn main() -> Result<()> {
         "Echoes TCP packets.",
     )?;
 
-    let libos: LibOS = LibOS::new(0);
+    let libos: LibOS = LibOS::new(0,1);
     let mut app: Application = Application::new(libos, &args)?;
 
     if app.is_server() {

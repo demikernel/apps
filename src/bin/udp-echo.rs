@@ -180,9 +180,8 @@ impl Application {
                 // Pop completed.
                 OperationResult::Pop(addr, buf) => {
                     nbytes += buf.len();
-                    println!("addr = {:?}", addr);
                     // Push packet back.
-                    let qt: QToken = match self.libos.pushto2(self.sockqd, &buf, self.remote) {
+                    let qt: QToken = match self.libos.pushto2(self.sockqd, &buf, addr.unwrap()) {
                         Ok(qt) => qt,
                         Err(e) => panic!("failed to push data to socket: {:?}", e.cause),
                     };
@@ -213,7 +212,7 @@ fn main() -> Result<()> {
         "Echoes UDP packets.",
     )?;
 
-    let libos: LibOS = LibOS::new(0, 1);
+    let libos: LibOS = LibOS::new(0,1);
 
     Application::new(libos, &args).run();
 }

@@ -378,7 +378,7 @@ fn main() -> Result<()> {
         "Measures latency using UDP packets.",
     )?;
 
-    let libos: LibOS = LibOS::new();
+    let libos: LibOS = LibOS::new(0,1);
 
     Application::new(libos, &args).run();
 
