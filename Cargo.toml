@@ -39,21 +39,12 @@ clap = "3.1.18"
 libc = "0.2.126"
 log = "0.4.17"
 
-demikernel = { git = "https://github.com/demikernel/demikernel", rev = "65fd747b1c53fe9e271b68e8927b530c66a6b2c8" }
-
-[patch."https://github.com/demikernel/demikernel"]
-demikernel = { path = "/home/users/fabricio/msr/demikernel" }
-
-runtime = { git = "https://github.com/demikernel/runtime", rev = "e11b81477edc6e5abe23224711b498f9464e89b9" }
-
-[patch."https://github.com/demikernel/runtime"]
-runtime = { path = "/home/users/fabricio/msr/runtime" }
-[patch."https://github.com/demikernel/inetstack"]
-inetstack = { path = "/home/users/fabricio/msr/inetstack" }
-
+demikernel = { git = "https://github.com/demikernel/demikernel", branch = "wip-feature-multicore" } 
 
 [features]
 default = [  ]
+mlx4 = [ "demikernel/mlx4" ]
+mlx5 = [ "demikernel/mlx5" ]
 catnip-libos = [ "demikernel/catnip-libos" ]
 catnap-libos = [ "demikernel/catnap-libos" ]
 catpowder-libos = [ "demikernel/catpowder-libos" ]

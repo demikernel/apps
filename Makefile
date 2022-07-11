@@ -16,7 +16,7 @@ export SRCDIR = $(CURDIR)/src
 
 #===============================================================================
 
-#export DRIVER ?= $(shell  [ ! -z "`lspci | grep -E "ConnectX-[4,5]"`" ] && echo mlx5 || echo mlx4)
+export DRIVER ?= $(shell  [ ! -z "`lspci | grep -E "ConnectX-[4,5]"`" ] && echo mlx5 || echo mlx4)
 export BUILD ?= --release
 export MSS ?= 1500
 export MTU ?= 1500
@@ -26,8 +26,6 @@ export LIBOS ?= catnap
 export BUFSIZE ?= 64
 export INJECTION_RATE ?= 1000
 export TIMEOUT ?= 180
-export PACKETS ?= 1
-export FLOWS ?= 1
 
 #===============================================================================
 
@@ -52,17 +50,11 @@ run-udp-dump:
 run-udp-echo:
 	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-echo -- --local $(LOCAL) --remote $(REMOTE)
 
-run-udp-reflector:
-	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-reflector -- --local $(LOCAL) --remote $(REMOTE)
-
 run-udp-pktgen:
 	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-pktgen -- --local $(LOCAL) --remote $(REMOTE) --bufsize=$(BUFSIZE) --injection_rate=$(INJECTION_RATE)
 
 run-udp-relay:
 	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-relay -- --local $(LOCAL) --remote $(REMOTE)
-
-run-udp-latency:
-	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-latency -- --local $(LOCAL) --remote $(REMOTE) --bufsize=$(BUFSIZE) --flows=$(FLOWS) --packets=$(PACKETS)
 
 clean:
 	rm -rf target && \
