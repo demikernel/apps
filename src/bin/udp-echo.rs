@@ -110,8 +110,6 @@ struct Application {
     libos: LibOS,
     // Local socket descriptor.
     sockqd: QDesc,
-    /// Remote endpoint.
-    remote: SocketAddrV4,
 }
 
 /// Associated Functions for the Application
@@ -123,7 +121,6 @@ impl Application {
     pub fn new(mut libos: LibOS, args: &ProgramArguments) -> Self {
         // Extract arguments.
         let local: SocketAddrV4 = args.get_local();
-        let remote: SocketAddrV4 = args.get_remote();
 
         // Create UDP socket.
         let sockqd: QDesc = match libos.socket(libc::AF_INET, libc::SOCK_DGRAM, 0) {
@@ -142,7 +139,6 @@ impl Application {
         Self {
             libos,
             sockqd,
-            remote,
         }
     }
 
