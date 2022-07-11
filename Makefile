@@ -26,6 +26,7 @@ export LIBOS ?= catnap
 export BUFSIZE ?= 64
 export INJECTION_RATE ?= 1000
 export TIMEOUT ?= 180
+export CORES ?= 1
 
 #===============================================================================
 
@@ -49,6 +50,9 @@ run-udp-dump:
 
 run-udp-echo:
 	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-echo -- --local $(LOCAL) --remote $(REMOTE)
+
+run-udp-echo2:
+	$(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-echo2 -- --local $(LOCAL) --cores $(CORES)
 
 run-udp-pktgen:
 	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-pktgen -- --local $(LOCAL) --remote $(REMOTE) --bufsize=$(BUFSIZE) --injection_rate=$(INJECTION_RATE)
