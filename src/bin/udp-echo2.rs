@@ -220,7 +220,7 @@ fn main() -> Result<()> {
     let pool: Vec<_> = (0..args0.get_cores()).map(|i| {
         let args = args0.clone();
         thread::spawn(move || {
-            core_affinity::set_for_current( CoreId { id: (2*(i+2)) as usize });
+            core_affinity::set_for_current( CoreId { id: (2*(i+1)) as usize });
             let libos: LibOS = LibOS::new(i as u16, args.get_cores() as u16);
             Application::new(libos, &args).run();
         })
