@@ -10,6 +10,21 @@ export PKG_CONFIG_PATH ?= $(shell find $(PREFIX)/lib/ -name '*pkgconfig*' -type 
 export LD_LIBRARY_PATH ?= $(shell find $(PREFIX)/lib/ -name '*x86_64-linux-gnu*' -type d | xargs | sed -E 's/ /:/g')
 export CONFIG_PATH ?= $(HOME)/config.yaml
 
+#=======================================================================================================================
+# Build Parameters
+#=======================================================================================================================
+
+export LIBOS ?= catnap
+export CARGO_FEATURES := --features=$(LIBOS)-libos
+
+# Switch for DPDK
+ifeq ($(LIBOS),catnip)
+DRIVER ?= $(shell [ ! -z "`lspci | grep -E "ConnectX-[4,5]"`" ] && echo mlx5 || echo mlx4)
+CARGO_FEATURES += --features=$(DRIVER)
+endif
+
+CARGO_FEATURES += $(FEATURES)
+
 #===============================================================================
 
 export SRCDIR = $(CURDIR)/src
@@ -30,31 +45,31 @@ export TIMEOUT ?= 180
 #===============================================================================
 
 all:
-	$(CARGO) build --all $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER)
+	$(CARGO) build --all $(BUILD) $(CARGO_FEATURES) $(CARGO_FLAGS)
 
 run-tcp-dump:
-	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin tcp-dump -- --local $(LOCAL)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FEATURES) $(CARGO_FLAGS) --bin tcp-dump -- --local $(LOCAL)
 
 run-tcp-echo-server:
-	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin tcp-echo -- --peer server --local $(LOCAL) --bufsize=$(BUFSIZE)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FEATURES) $(CARGO_FLAGS) --bin tcp-echo -- --peer server --local $(LOCAL) --bufsize=$(BUFSIZE)
 
 run-tcp-echo-client:
-	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin tcp-echo -- --peer client --remote $(REMOTE) --bufsize=$(BUFSIZE)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FEATURES) $(CARGO_FLAGS) --bin tcp-echo -- --peer client --remote $(REMOTE) --bufsize=$(BUFSIZE)
 
 run-tcp-pktgen:
-	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin tcp-pktgen -- --remote $(REMOTE) --bufsize=$(BUFSIZE) --injection_rate=$(INJECTION_RATE)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FEATURES) $(CARGO_FLAGS) --bin tcp-pktgen -- --remote $(REMOTE) --bufsize=$(BUFSIZE) --injection_rate=$(INJECTION_RATE)
 
 run-udp-dump:
-	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-dump -- --local $(LOCAL)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FEATURES) $(CARGO_FLAGS) --bin udp-dump -- --local $(LOCAL)
 
 run-udp-echo:
-	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-echo -- --local $(LOCAL) --remote $(REMOTE)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FEATURES) $(CARGO_FLAGS) --bin udp-echo -- --local $(LOCAL) --remote $(REMOTE)
 
 run-udp-pktgen:
-	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-pktgen -- --local $(LOCAL) --remote $(REMOTE) --bufsize=$(BUFSIZE) --injection_rate=$(INJECTION_RATE)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FEATURES) $(CARGO_FLAGS) --bin udp-pktgen -- --local $(LOCAL) --remote $(REMOTE) --bufsize=$(BUFSIZE) --injection_rate=$(INJECTION_RATE)
 
 run-udp-relay:
-	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FLAGS) --features=$(LIBOS)-libos --features=$(DRIVER) --bin udp-relay -- --local $(LOCAL) --remote $(REMOTE)
+	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FEATURES) $(CARGO_FLAGS) --bin udp-relay -- --local $(LOCAL) --remote $(REMOTE)
 
 clean:
 	rm -rf target && \
