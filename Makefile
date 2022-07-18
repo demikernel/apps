@@ -71,6 +71,13 @@ run-udp-pktgen:
 run-udp-relay:
 	timeout $(TIMEOUT) $(CARGO) run $(BUILD) $(CARGO_FEATURES) $(CARGO_FLAGS) --bin udp-relay -- --local $(LOCAL) --remote $(REMOTE)
 
+# Check code style formatting.
+check-fmt: check-fmt-rust
+
+# Check code style formatting for Rust.
+check-fmt-rust:
+	$(CARGO) fmt --all -- --check
+
 clean:
 	rm -rf target && \
 	$(CARGO) clean && \
