@@ -1,0 +1,131 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+name: Main Catnip
+
+concurrency:
+  group: azure-catnip
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - bugfix-*
+      - enhancement-*
+      - feature-*
+      - workaround-*
+      - dev
+      - unstable
+      - master
+
+env:
+  GITHUB_REPOSITORY: $GITHUB_REPOSITORY
+
+jobs:
+
+  #=====================================================================================================================
+  # Setup
+  #=====================================================================================================================
+
+  # Node 0
+  setup-demikernel0:
+    name: Node 0
+    uses: demikernel/apps/.github/workflows/setup.yml@dev
+    secrets:
+      host: ${{ secrets.CATNIP_HOSTNAME_A }}
+      port: ${{ secrets.PORTNUM }}
+      key: ${{ secrets.SSHKEY }}
+      username: ${{ secrets.USERNAME }}
+
+  # Node 1
+  setup-demikernel1:
+    name: Node 1
+    uses: demikernel/apps/.github/workflows/setup.yml@dev
+    secrets:
+      host: ${{ secrets.CATNIP_HOSTNAME_B }}
+      port: ${{ secrets.PORTNUM }}
+      key: ${{ secrets.SSHKEY }}
+      username: ${{ secrets.USERNAME }}
+
+  #=====================================================================================================================
+  # Setup Completed
+  #=====================================================================================================================
+
+  setup:
+    name: Setup Completed
+    needs: [setup-demikernel0, setup-demikernel1]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log
+        run: echo "Setup Completed!"
+
+  #=====================================================================================================================
+  # Build
+  #=====================================================================================================================
+
+  # Node 0
+  build-demikernel0:
+    name: Node 0
+    needs: [setup]
+    uses: demikernel/apps/.github/workflows/build.yml@dev
+    with:
+      libos: catnip
+    secrets:
+      host: ${{ secrets.CATNIP_HOSTNAME_A }}
+      port: ${{ secrets.PORTNUM }}
+      key: ${{ secrets.SSHKEY }}
+      username: ${{ secrets.USERNAME }}
+
+  # Node 1
+  build-demikernel1:
+    name: Node 1
+    needs: [setup]
+    uses: demikernel/apps/.github/workflows/build.yml@dev
+    with:
+      libos: catnip
+    secrets:
+      host: ${{ secrets.CATNIP_HOSTNAME_B }}
+      port: ${{ secrets.PORTNUM }}
+      key: ${{ secrets.SSHKEY }}
+      username: ${{ secrets.USERNAME }}
+
+  #=====================================================================================================================
+  # Build Completed
+  #=====================================================================================================================
+
+  # Node 0
+  build-completed:
+    name: Build Completed
+    needs: [build-demikernel0, build-demikernel1]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log
+        run: echo "Build Completed!"
+
+  #=====================================================================================================================
+  # Cleanup
+  #=====================================================================================================================
+
+  # Node 0
+  cleanup-demikernel0:
+    name: Node 0
+    if: always()
+    needs: [build-completed]
+    uses: demikernel/apps/.github/workflows/cleanup.yml@dev
+    secrets:
+      host: ${{ secrets.CATNIP_HOSTNAME_A }}
+      port: ${{ secrets.PORTNUM }}
+      key: ${{ secrets.SSHKEY }}
+      username: ${{ secrets.USERNAME }}
+
+  # Node 1
+  cleanup-demikernel1:
+    name: Node 1
+    if: always()
+    needs: [build-completed]
+    uses: demikernel/apps/.github/workflows/cleanup.yml@dev
+    secrets:
+      host: ${{ secrets.CATNIP_HOSTNAME_B }}
+      port: ${{ secrets.PORTNUM }}
+      key: ${{ secrets.SSHKEY }}
+      username: ${{ secrets.USERNAME }}

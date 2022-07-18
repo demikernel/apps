@@ -3,164 +3,106 @@
 
 name: Build
 
-concurrency:
-  group: azure
-  cancel-in-progress: true
-
 on:
-  push:
-    branches:
-      - bugfix-*
-      - enhancement-*
-      - feature-*
-      - workaround-*
-      - dev
-      - unstable
-      - master
+  workflow_call:
+    inputs:
+      libos:
+        required: true
+        type: string
+    secrets:
+      host:
+        required: true
+      port:
+        required: true
+      key:
+        required: true
+      username:
+        required: true
 
 env:
-  CARGO_TERM_COLOR: always
   GITHUB_REPOSITORY: $GITHUB_REPOSITORY
-  GITHUB_SHA: $GITHUB_SHA
 
 jobs:
 
-  #====================
-  # Setup
-  #====================
+  #=====================================================================================================================
+  # Build Doc
+  #=====================================================================================================================
 
-  # Demikernel 0
-  setup-demikernel0:
-    name: Demikernel 0
-    uses: demikernel/workflows/.github/workflows/setup.yml@dev
-    secrets:
-      host: ${{ secrets.HOSTNAME_A }}
-      port: ${{ secrets.PORTNUM_A }}
-      key: ${{ secrets.SSHKEY }}
-      username: ${{ secrets.USERNAME }}
+  build-doc:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+    - name: Compile
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.host }}
+        username: ${{ secrets.username }}
+        key: ${{ secrets.key }}
+        port: ${{ secrets.port }}
+        envs: GITHUB_REPOSITORY
+        script: |
+          cd $GITHUB_REPOSITORY
+          make doc
 
-  # Demikernel 1
-  setup-demikernel1:
-    name: Demikernel 1
-    uses: demikernel/workflows/.github/workflows/setup.yml@dev
-    secrets:
-      host: ${{ secrets.HOSTNAME_B }}
-      port: ${{ secrets.PORTNUM_B }}
-      key: ${{ secrets.SSHKEY }}
-      username: ${{ secrets.USERNAME }}
+  #=====================================================================================================================
+  # Check Formatting
+  #=====================================================================================================================
 
-  #====================
-  # Compile Catnap
-  #====================
+  check-fmt:
+    name: Check Formatting
+    needs: [build-doc]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Compile
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.host }}
+        username: ${{ secrets.username }}
+        key: ${{ secrets.key }}
+        port: ${{ secrets.port }}
+        envs: GITHUB_REPOSITORY
+        script: |
+          cd $GITHUB_REPOSITORY
+          make check-fmt LIBOS=${{ inputs.libos }}
 
-  # Demikernel 0
-  build-catnap-demikernel0:
-    name: Build Catnap
-    needs: [setup-demikernel0]
-    uses: demikernel/workflows/.github/workflows/compile.yml@dev
-    with:
-      target: "all LIBOS=catnap"
-    secrets:
-      host: ${{ secrets.HOSTNAME_A }}
-      port: ${{ secrets.PORTNUM_A }}
-      key: ${{ secrets.SSHKEY }}
-      username: ${{ secrets.USERNAME }}
+  #=====================================================================================================================
+  # Build Debug
+  #=====================================================================================================================
 
-  # Demikernel 1
-  build-catnap-demikernel1:
-    name: Build Catnap
-    needs: [setup-demikernel1]
-    uses: demikernel/workflows/.github/workflows/compile.yml@dev
-    with:
-      target: "all LIBOS=catnap"
-    secrets:
-      host: ${{ secrets.HOSTNAME_B }}
-      port: ${{ secrets.PORTNUM_B }}
-      key: ${{ secrets.SSHKEY }}
-      username: ${{ secrets.USERNAME }}
+  build-debug:
+    name: Compile Debug
+    needs: [check-fmt]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Compile
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.host }}
+        username: ${{ secrets.username }}
+        key: ${{ secrets.key }}
+        port: ${{ secrets.port }}
+        envs: GITHUB_REPOSITORY
+        script: |
+          cd $GITHUB_REPOSITORY
+          make all DEBUG=yes LIBOS=${{ inputs.libos }}
 
-  #====================
-  # Compile Catpowder
-  #====================
+  #=====================================================================================================================
+  # Build Release
+  #=====================================================================================================================
 
-  # Demikernel 0
-  build-catpowder-demikernel0:
-    name: Build Catpowder
-    needs: [build-catnap-demikernel0]
-    uses: demikernel/workflows/.github/workflows/compile.yml@dev
-    with:
-      target: "all LIBOS=catpowder"
-    secrets:
-      host: ${{ secrets.HOSTNAME_A }}
-      port: ${{ secrets.PORTNUM_A }}
-      key: ${{ secrets.SSHKEY }}
-      username: ${{ secrets.USERNAME }}
-
-  # Demikernel 1
-  build-catpowder-demikernel1:
-    name: Build Catpowder
-    needs: [build-catnap-demikernel1]
-    uses: demikernel/workflows/.github/workflows/compile.yml@dev
-    with:
-      target: "all LIBOS=catpowder"
-    secrets:
-      host: ${{ secrets.HOSTNAME_B }}
-      port: ${{ secrets.PORTNUM_B }}
-      key: ${{ secrets.SSHKEY }}
-      username: ${{ secrets.USERNAME }}
-
-  #====================
-  # Compile Catnip
-  #====================
-
-  # Demikernel 0
-  build-catnip-demikernel0:
-    name: Build Catnip
-    needs: [build-catpowder-demikernel0]
-    uses: demikernel/workflows/.github/workflows/compile.yml@dev
-    with:
-      target: "all LIBOS=catnip"
-    secrets:
-      host: ${{ secrets.HOSTNAME_A }}
-      port: ${{ secrets.PORTNUM_A }}
-      key: ${{ secrets.SSHKEY }}
-      username: ${{ secrets.USERNAME }}
-
-  # Demikernel 1
-  build-catnip-demikernel1:
-    name: Build Catnip
-    needs: [build-catpowder-demikernel1]
-    uses: demikernel/workflows/.github/workflows/compile.yml@dev
-    with:
-      target: "all LIBOS=catnip"
-    secrets:
-      host: ${{ secrets.HOSTNAME_B }}
-      port: ${{ secrets.PORTNUM_B }}
-      key: ${{ secrets.SSHKEY }}
-      username: ${{ secrets.USERNAME }}
-
-  #====================
-  # Cleanup
-  #====================
-
-  # Demikernel 0
-  cleanup-demikernel0:
-    name: Demikernel 0
-    needs: [build-catnip-demikernel0]
-    uses: demikernel/workflows/.github/workflows/cleanup.yml@dev
-    secrets:
-      host: ${{ secrets.HOSTNAME_A }}
-      port: ${{ secrets.PORTNUM_A }}
-      key: ${{ secrets.SSHKEY }}
-      username: ${{ secrets.USERNAME }}
-
-  # Demikernel 1
-  cleanup-demikernel1:
-    name: Demikernel 1
-    needs: [build-catnip-demikernel1]
-    uses: demikernel/workflows/.github/workflows/cleanup.yml@dev
-    secrets:
-      host: ${{ secrets.HOSTNAME_B }}
-      port: ${{ secrets.PORTNUM_B }}
-      key: ${{ secrets.SSHKEY }}
-      username: ${{ secrets.USERNAME }}
+  build-release:
+    name: Compile Release
+    needs: [build-debug]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Compile
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.host }}
+        username: ${{ secrets.username }}
+        key: ${{ secrets.key }}
+        port: ${{ secrets.port }}
+        envs: GITHUB_REPOSITORY
+        script: |
+          cd $GITHUB_REPOSITORY
+          make all DEBUG=no LIBOS=${{ inputs.libos }}
