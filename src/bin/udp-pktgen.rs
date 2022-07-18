@@ -242,7 +242,7 @@ impl Application {
             }
 
             // Push packet.
-            if last_push.elapsed() > Duration::from_micros(self.injection_rate) {
+            if last_push.elapsed() > Duration::from_nanos(self.injection_rate) {
                 let qt: QToken = match self.libos.pushto2(self.sockqd, &data, self.remote) {
                     Ok(qt) => qt,
                     Err(e) => panic!("failed to push data to socket: {:?}", e.cause),
