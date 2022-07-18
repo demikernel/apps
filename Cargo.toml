@@ -3,7 +3,7 @@
 
 [package]
 name = "apps"
-version = "1.0.2"
+version = "1.0.3"
 authors = [ "Microsoft Corporation" ]
 description = "Demo Applications for Demikernel"
 homepage = "https://aka.ms/demikernel"
