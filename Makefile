@@ -78,6 +78,10 @@ check-fmt: check-fmt-rust
 check-fmt-rust:
 	$(CARGO) fmt --all -- --check
 
+# Builds documentation.
+doc:
+	$(CARGO) doc $(CARGO_FEATURES) $(CARGO_FLAGS) --no-deps
+
 clean:
 	rm -rf target && \
 	$(CARGO) clean && \
