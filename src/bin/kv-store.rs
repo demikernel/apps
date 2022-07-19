@@ -156,33 +156,61 @@ impl ProgramArguments {
     
 }
 
+/*
+ * KVStore is implemented as a 2-layer hash table. In theory, this will allow
+ * for future registration of the overall hash table structure in smaller chunks.
+ * The interface to the hash table is still the same. The user provides a key. The
+ * key is first used in the outer hash table to find the inner hash table, and then
+ * the same key is used to get the resulting value.
+ */
 struct KVStore {
-    store: HashMap<String, String>
+    store: HashMap<String, HashMap<String, String>>
 }
 
 impl KVStore {
-    pub fn new(_keysize: u64, _valsize: u64, _numkeys: u64) -> Result<Self> {
+    pub fn new() -> Result<Self> {
         let mut kvs: KVStore = KVStore { 
-            store: HashMap::new(),
+            store: HashMap::default(),
         };
 
         Ok(kvs)
     }
 
     pub fn get(&self, key: &String) -> Option<&String> {
-        self.store.get(key)
+        let temp_hashmap: Option<HashMap<String, HashMap<String, String>>> = self.store.get(key);
+        if temp_hashmap.is_none() { 
+            None 
+        }
+        let hashmap: HashMap<String, String> = temp_hashmap.unwrap();
+        hashmap.get(key)
     }
 
     pub fn insert(&mut self, key: &String, value: &String) -> Option<(String)> {
-        self.store.insert(key, value)
+        let inner: HashMap<String, String> = HashMap::new();
+        inner.insert(key, value);
+        self.store.insert(key, inner)
     }
 
     pub fn remove(&mut self, key: &String) -> Option<(String)> {
-        self.store.remove(key)
+        let temp_hashmap: Option<HashMap<String, HashMap<String, String>>> = self.store.get(key);
+        if temp_hashmap.is_none() { 
+            None 
+        }
+        let hashmap: HashMap<String, String> = temp_hashmap.unwrap();
+        hashmap.remove(key)
     }
 
     pub fn len(&self) -> usize {
-        self.store.len()
+        let length: usize = 0;
+        for value in self.store.values() {
+            length = length + value.len()
+        }
+        length
+    }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
 
@@ -190,7 +218,7 @@ impl KVStore {
 
 impl Default for KVStore {
     fn default() -> Self {
-        Self::new(DEFAULT_KEYSIZE, DEFAULT_VALSIZE, DEFAULT_NUMKEYS)
+        Self::new()
     }
 }
 
@@ -279,7 +307,7 @@ impl KVApp {
     }
 
     fn run_server(&mut self, args: &ProgramArguments) -> ! {
-        let kvstore: KVStore = KVStore::new(args.get_keysize(), args.get_valsize(), args.get_numkeys());
+        let kvstore: KVStore = KVStore::new();
         let mut qtokens: Vec<QToken> = Vec::new();
 
         // Accept first connection.
