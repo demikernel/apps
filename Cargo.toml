@@ -35,11 +35,11 @@ name = "udp-relay"
 
 [dependencies]
 anyhow = "1.0.58"
-clap = "3.2.12"
+clap = "3.2.14"
 libc = "0.2.126"
 log = "0.4.17"
 
-demikernel = { git = "https://github.com/demikernel/demikernel", rev = "3aa9adeea5967521a639b1109ee245cf845a669c" }
+demikernel = { git = "https://github.com/demikernel/demikernel", rev = "3ccce0380461d5630c58dafd12000edfc7c58815" }
 
 [features]
 default = [  ]
